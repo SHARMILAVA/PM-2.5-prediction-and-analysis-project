@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PM2.5 Estimation System - Satellite Image Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container header-inner">
+            <div class="logo-group">
+                <div class="logo-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+                <div>
+                    <h1>PM2.5 Estimation System</h1>
+                    <p class="subtitle">High-Resolution Satellite Image Analysis for Air Quality Assessment</p>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="container">
+        <section class="upload-section" id="upload-section">
+            <div class="card">
+                <div class="card-header"><h2>Upload Satellite Image</h2></div>
+                <p class="card-desc">Upload a satellite image to estimate PM2.5 concentration, extract atmospheric features, and generate comprehensive visualizations.</p>
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="file-drop-zone" id="dropZone">
+                        <input type="file" id="satellite_image" name="satellite_image" accept="image/*" required>
+                        <div class="drop-content">
+                            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <p class="drop-text" id="file-name">Drag &amp; drop or click to select an image</p>
+                            <span class="drop-hint">PNG, JPG, JPEG, TIFF, BMP &mdash; Max 16 MB</span>
+                        </div>
+                    </div>
+                    <div id="upload-preview" class="upload-preview" style="display:none;">
+                        <img id="preview-img" src="" alt="Preview">
+                        <button type="button" class="remove-preview" id="removePreview">&times;</button>
+                    </div>
+                    <button type="submit" class="btn-primary" id="analyzeBtn">Analyze Image</button>
+                </form>
+                <div id="loading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Processing satellite image &mdash; extracting features and estimating PM2.5...</p>
+                    <div class="progress-bar-track"><div class="progress-bar-fill" id="progressBar"></div></div>
+                </div>
+            </div>
+        </section>
+        <div id="error-message" class="error-message" style="display: none;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="error-text"></span>
+        </div>
+        <div id="success-message" class="success-message" style="display: none;">
+            <i class="fas fa-check-circle"></i>
+            <span id="success-text">Analysis completed successfully!</span>
+        </div>
+        <section id="results" class="results-section" style="display: none;">
+            <div class="card result-card" id="result-original">
+                <div class="card-header"><h2>Original Satellite Image</h2></div>
+                <p class="card-desc">The uploaded satellite image used as input for PM2.5 analysis.</p>
+                <div class="image-container"><img id="original-image" src="" alt="Original" class="result-image"></div>
+            </div>
+            <div class="card result-card" id="result-summary">
+                <div class="card-header"><h2>PM2.5 Estimation Results</h2></div>
+                <div class="pm25-display">
+                    <div class="pm25-main">
+                        <div class="pm25-value-wrap">
+                            <span class="pm25-label">Estimated PM2.5</span>
+                            <span id="pm25-number" class="pm25-number">--</span>
+                            <span class="pm25-unit">microg/m3</span>
+                        </div>
+                        <div id="aqi-badge" class="aqi-badge"><span id="aqi-category">--</span></div>
+                    </div>
+                    <div class="pm25-meta">
+                        <div class="meta-item"><span class="meta-label">Confidence</span><span class="meta-value" id="confidence">--%</span></div>
+                        <div class="meta-item"><span class="meta-label">Timestamp</span><span class="meta-value" id="timestamp">--</span></div>
+                    </div>
+                </div>
+                <div class="health-advice" id="health-advice">--</div>
+            </div>
+            <div class="card result-card" id="result-features">
+                <div class="card-header"><h2>Atmospheric Features</h2></div>
+                <p class="card-desc">Extracted atmospheric parameters from image processing analysis.</p>
+                <div class="features-grid">
+                    <div class="feature-item"><span class="feature-label">Haze Score</span><span class="feature-value" id="feature-haze">--</span><div class="feature-bar"><div class="feature-bar-fill haze" id="bar-haze"></div></div></div>
+                    <div class="feature-item"><span class="feature-label">Turbidity</span><span class="feature-value" id="feature-turbidity">--</span><div class="feature-bar"><div class="feature-bar-fill turbidity" id="bar-turbidity"></div></div></div>
+                    <div class="feature-item"><span class="feature-label">Visibility</span><span class="feature-value" id="feature-visibility">--</span><div class="feature-bar"><div class="feature-bar-fill visibility" id="bar-visibility"></div></div></div>
+                    <div class="feature-item"><span class="feature-label">Contrast</span><span class="feature-value" id="feature-contrast">--</span><div class="feature-bar"><div class="feature-bar-fill contrast" id="bar-contrast"></div></div></div>
+                    <div class="feature-item"><span class="feature-label">Brightness</span><span class="feature-value" id="feature-brightness">--</span><div class="feature-bar"><div class="feature-bar-fill brightness" id="bar-brightness"></div></div></div>
+                    <div class="feature-item"><span class="feature-label">Saturation</span><span class="feature-value" id="feature-saturation">--</span><div class="feature-bar"><div class="feature-bar-fill saturation" id="bar-saturation"></div></div></div>
+                </div>
+            </div>
+            <div class="card result-card" id="result-feature-chart">
+                <div class="card-header"><h2>Feature Analysis Graph</h2></div>
+                <p class="card-desc">Bar and line chart visualization of extracted atmospheric features.</p>
+                <div class="image-container"><img id="features-chart" src="" alt="Feature Chart" class="result-image"></div>
+            </div>
+            <div class="card result-card" id="result-heatmap">
+                <div class="card-header"><h2>PM2.5 Spatial Heatmap</h2></div>
+                <p class="card-desc">Spatial distribution of estimated PM2.5 concentration across the image.</p>
+                <div class="image-container"><img id="heatmap-image" src="" alt="PM2.5 Heatmap" class="result-image"></div>
+            </div>
+            <div class="card result-card" id="result-dehazed">
+                <div class="card-header"><h2>PM2.5 Removal &mdash; Dehazed Image</h2></div>
+                <p class="card-desc">Image after simulated PM2.5/haze removal using adaptive histogram equalization and color correction.</p>
+                <div class="image-container"><img id="dehazed-image" src="" alt="Dehazed Image" class="result-image"></div>
+            </div>
+            <div class="card result-card" id="result-before-after">
+                <div class="card-header"><h2>Before &amp; After Comparison</h2></div>
+                <p class="card-desc">Side-by-side comparison of original (polluted) vs. simulated clear (dehazed) conditions.</p>
+                <div class="image-container"><img id="before-after-image" src="" alt="Before/After" class="result-image"></div>
+            </div>
+            <div class="card result-card downloads-card" id="result-downloads">
+                <div class="card-header"><h2>Analysis Complete - Download Report</h2></div>
+                <p class="card-desc">Your PM2.5 analysis has been completed. Download a comprehensive PDF report of all results and visualizations.</p>
+                <div class="download-section">
+                    <button class="btn-download" id="downloadPdfBtn">
+                        <i class="fas fa-file-pdf"></i> Download Full Report (PDF)
+                    </button>
+                    <button class="btn-download-secondary" id="resetBtn">
+                        <i class="fas fa-redo"></i> Analyze Another Image
+                    </button>
+                </div>
+            </div>
+
+        </section>
+    </main>
+    <footer>
+        <div class="container footer-inner">
+            <p>PM2.5 Estimation System &mdash; High-Resolution Satellite Image Analysis</p>
+            <p class="footer-sub">Final Year Engineering Project &bull; 2026</p>
+        </div>
+    </footer>
+    <script>
+        // UI State Management
+        let analysisData = null;
+
+        // Error display function
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            errorText.textContent = message;
+            errorEl.style.display = 'flex';
+            setTimeout(() => { errorEl.style.display = 'none'; }, 6000);
+        }
+
+        // Success message display
+        function showSuccess(message) {
+            const successEl = document.getElementById('success-message');
+            const successText = document.getElementById('success-text');
+            successText.textContent = message;
+            successEl.style.display = 'flex';
+            setTimeout(() => { successEl.style.display = 'none'; }, 5000);
+        }
+
+        // File input handling
+        const fileInput = document.getElementById('satellite_image');
+        const dropZone = document.getElementById('dropZone');
+        const previewWrap = document.getElementById('upload-preview');
+        const previewImg = document.getElementById('preview-img');
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (!isValidImageFile(file)) {
+                    showError('Invalid file type. Please upload an image (PNG, JPG, JPEG, TIFF, BMP).');
+                    fileInput.value = '';
+                    return;
+                }
+                document.getElementById('file-name').textContent = file.name;
+                showPreview(file);
+            }
+        });
+
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                const file = e.dataTransfer.files[0];
+                if (!isValidImageFile(file)) {
+                    showError('Invalid file type. Please upload an image (PNG, JPG, JPEG, TIFF, BMP).');
+                    fileInput.value = '';
+                    return;
+                }
+                document.getElementById('file-name').textContent = file.name;
+                showPreview(file);
+            }
+        });
+
+        function isValidImageFile(file) {
+            const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/tiff', 'image/bmp'];
+            return validTypes.includes(file.type);
+        }
+
+        function showPreview(file) {
+            const r = new FileReader();
+            r.onload = e => {
+                previewImg.src = e.target.result;
+                previewWrap.style.display = 'block';
+            };
+            r.readAsDataURL(file);
+        }
+
+        document.getElementById('removePreview').addEventListener('click', () => {
+            previewWrap.style.display = 'none';
+            fileInput.value = '';
+            document.getElementById('file-name').textContent = 'Drag & drop or click to select an image';
+        });
+
+        // Progress bar animation
+        let progressInterval;
+
+        function startProgress() {
+            let w = 0;
+            const bar = document.getElementById('progressBar');
+            bar.style.width = '0%';
+            progressInterval = setInterval(() => {
+                if (w < 90) {
+                    w += Math.random() * 8;
+                    if (w > 90) w = 90;
+                    bar.style.width = w + '%';
+                }
+            }, 400);
+        }
+
+        function completeProgress() {
+            clearInterval(progressInterval);
+            document.getElementById('progressBar').style.width = '100%';
+        }
+
+        // Reset form
+        document.getElementById('resetBtn')?.addEventListener('click', () => {
+            location.reload();
+        });
+
+        // PDF Download handler
+        document.getElementById('downloadPdfBtn')?.addEventListener('click', async () => {
+            if (!analysisData) return showError('No analysis data available');
+            
+            const btn = document.getElementById('downloadPdfBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+
+            try {
+                const response = await fetch('/download_report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(analysisData)
+                });
+
+                if (!response.ok) throw new Error('Failed to generate PDF');
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `PM25_Report_${new Date().getTime()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showSuccess('PDF report downloaded successfully!');
+            } catch (error) {
+                showError('Failed to download PDF: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-file-pdf"></i> Download Full Report (PDF)';
+            }
+        });
+
+        // Form submission with improved error handling
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showError('Please select an image file.');
+                return;
+            }
+
+            if (!isValidImageFile(file)) {
+                showError('Invalid file type. Please upload an image (PNG, JPG, JPEG, TIFF, BMP).');
+                return;
+            }
+
+            if (file.size > 16 * 1024 * 1024) {
+                showError('File size exceeds 16MB limit.');
+                return;
+            }
+
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('analyzeBtn').disabled = true;
+
+            startProgress();
+            const formData = new FormData();
+            formData.append('satellite_image', file);
+
+            try {
+                const response = await fetch('/analyze', { method: 'POST', body: formData });
+                const data = await response.json();
+                completeProgress();
+
+                if (!response.ok || data.error) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+
+                // Store analysis data for PDF generation
+                analysisData = data;
+
+                // Update results display
+                document.getElementById('pm25-number').textContent = data.pm25.toFixed(1);
+                document.getElementById('aqi-category').textContent = data.aqi_category;
+                document.getElementById('aqi-badge').style.background = data.aqi_color;
+                document.getElementById('confidence').textContent = Math.round(data.confidence) + '%';
+                document.getElementById('timestamp').textContent = data.timestamp;
+                document.getElementById('health-advice').textContent = data.health_advice;
+
+                // Update feature values
+                Object.keys(data.features).forEach(key => {
+                    const id = key.replace(/_/g, '-');
+                    const el = document.getElementById(`feature-${id}`);
+                    const bar = document.getElementById(`bar-${id}`);
+                    if (el) {
+                        el.textContent = data.features[key];
+                        if (bar) {
+                            setTimeout(() => {
+                                // Features are already 0-100 scale, use directly as percentage
+                                const percentage = Math.min(data.features[key], 100);
+                                bar.style.width = percentage + '%';
+                            }, 100);
+                        }
+                    }
+                });
+
+                // Update images with error handling
+                const images = [
+                    { id: 'original-image', src: data.images.original },
+                    { id: 'heatmap-image', src: data.images.heatmap },
+                    { id: 'dehazed-image', src: data.images.dehazed },
+                    { id: 'before-after-image', src: data.images.before_after },
+                    { id: 'features-chart', src: data.images.features_chart }
+                ];
+                
+                images.forEach(img => {
+                    const element = document.getElementById(img.id);
+                    if (element) {
+                        element.src = img.src;
+                        element.onerror = function() {
+                            console.error('Failed to load image:', img.src);
+                            this.alt = 'Image failed to load: ' + img.src;
+                        };
+                        element.onload = function() {
+                            console.log('Image loaded successfully:', img.src);
+                        };
+                    }
+                });
+
+                // Show results
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+                
+                // Scroll to results
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                showSuccess('Analysis completed successfully! Download your report below.');
+
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showError(error.message || 'Analysis failed. Please try again.');
+                document.getElementById('loading').style.display = 'none';
+            } finally {
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
