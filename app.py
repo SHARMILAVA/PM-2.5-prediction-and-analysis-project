@@ -5,13 +5,15 @@ PM2.5 Estimation System - Main Application
 Author: PM2.5 Estimation System
 """
 
-from flask import Flask, render_template, request, jsonify, url_for, send_file
+from flask import Flask, render_template, request, jsonify, url_for, send_file, redirect, session
 import os
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import traceback
 import json
 import numpy as np
+from functools import wraps
+import uuid
 
 # Import our custom modules
 from image_analysis import ImageAnalyzer
@@ -44,10 +46,16 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'tif', 'tiff', 'bmp'}
 
+# Simple credential gate for demo/admin access
+ADMIN_EMAIL = 'admin@gmail.com'
+ADMIN_PASSWORD = '160904'
+
 # Ensure required directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['RESULTS_FOLDER'], exist_ok=True)
 os.makedirs('data', exist_ok=True)
+
+REPORT_HISTORY_FILE = 'data/report_history.json'
 
 
 def allowed_file(filename):
@@ -56,13 +64,183 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def is_logged_in():
+    """Check whether the current session is authenticated."""
+    return bool(session.get('authenticated'))
+
+
+def login_required(require_json=False):
+    """Protect routes that require authentication."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if is_logged_in():
+                return func(*args, **kwargs)
+
+            if require_json:
+                return jsonify({'error': 'Authentication required'}), 401
+
+            return redirect(url_for('login'))
+        return wrapper
+    return decorator
+
+
+def get_risk_measures(aqi_category):
+    """Return safety suggestions based on AQI category."""
+    measures = {
+        'Good': [
+            'Continue normal outdoor activity.',
+            'Maintain routine air-quality monitoring.',
+            'Use green transport options to keep emissions low.'
+        ],
+        'Moderate': [
+            'Sensitive groups should reduce prolonged outdoor exertion.',
+            'Keep indoor ventilation balanced during peak traffic hours.',
+            'Use masks when traveling through high-traffic corridors.'
+        ],
+        'Unhealthy for Sensitive Groups': [
+            'Children, elderly, and respiratory patients should limit outdoor time.',
+            'Use N95 masks when outdoors for longer duration.',
+            'Prefer indoor exercise and close windows near busy roads.'
+        ],
+        'Unhealthy': [
+            'Reduce all non-essential outdoor activities.',
+            'Use air purifiers indoors where possible.',
+            'Follow mask use and hydration precautions strictly.'
+        ],
+        'Very Unhealthy': [
+            'Avoid outdoor exposure except for urgent needs.',
+            'Run air purifiers continuously in occupied rooms.',
+            'Schools/offices should limit outdoor sessions.'
+        ],
+        'Hazardous': [
+            'Stay indoors and avoid travel unless critical.',
+            'Use high-filtration masks for any outdoor movement.',
+            'Issue public health alerts and emergency mitigation steps.'
+        ]
+    }
+    return measures.get(aqi_category, [
+        'Follow local advisory and minimize outdoor exposure when uncertain.'
+    ])
+
+
+def load_report_history():
+    """Load stored report rows from disk."""
+    if not os.path.exists(REPORT_HISTORY_FILE):
+        return []
+
+    try:
+        with open(REPORT_HISTORY_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def save_report_history(rows):
+    """Persist report rows to disk."""
+    with open(REPORT_HISTORY_FILE, 'w', encoding='utf-8') as f:
+        json.dump(rows, f, indent=2)
+
+
+def append_report_row(row):
+    """Append a report row and keep only recent records."""
+    rows = load_report_history()
+    rows.append(row)
+    # Keep recent 200 reports to prevent unbounded growth.
+    rows = rows[-200:]
+    save_report_history(rows)
+
+
+def get_report_row(report_id):
+    """Find a report row by report id."""
+    rows = load_report_history()
+    for row in reversed(rows):
+        if row.get('report_id') == report_id:
+            return row
+    return None
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """Render login page and authenticate users."""
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+
+        if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
+            session['authenticated'] = True
+            session['user_email'] = ADMIN_EMAIL
+            return redirect(url_for('home'))
+
+        return render_template('login.html', error='Invalid email or password.')
+
+    if is_logged_in():
+        return redirect(url_for('home'))
+
+    return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    """Clear user session and return to login screen."""
+    session.clear()
+    return redirect(url_for('login'))
+
+
 @app.route('/')
-def index():
-    """Render the main page."""
-    return render_template('index.html')
+@login_required()
+def home():
+    """Render dashboard home page."""
+    return render_template('dashboard.html', page='home', user_email=session.get('user_email', ADMIN_EMAIL))
+
+
+@app.route('/analysis')
+@login_required()
+def analysis():
+    """Render analysis workspace page."""
+    return render_template(
+        'dashboard.html',
+        page='analysis',
+        user_email=session.get('user_email', ADMIN_EMAIL),
+        analysis_data=session.get('last_analysis')
+    )
+
+
+@app.route('/account')
+@login_required()
+def account():
+    """Render account page."""
+    return render_template('dashboard.html', page='account', user_email=session.get('user_email', ADMIN_EMAIL))
+
+
+@app.route('/report')
+@login_required()
+def report():
+    """Render report page."""
+    last_analysis = session.get('last_analysis')
+    risk_measures = []
+    if last_analysis and last_analysis.get('aqi_category'):
+        risk_measures = get_risk_measures(last_analysis['aqi_category'])
+
+    report_rows = sorted(
+        load_report_history(),
+        key=lambda r: r.get('created_at', ''),
+        reverse=True
+    )
+
+    return render_template(
+        'dashboard.html',
+        page='report',
+        user_email=session.get('user_email', ADMIN_EMAIL),
+        analysis_data=last_analysis,
+        risk_measures=risk_measures,
+        report_rows=report_rows
+    )
 
 
 @app.route('/analyze', methods=['POST'])
+@login_required(require_json=True)
 def analyze():
     """
     Handle image upload and perform PM2.5 analysis.
@@ -182,6 +360,24 @@ def analyze():
             },
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
+
+        # Keep latest analysis in session for report page and PDF download.
+        session['last_analysis'] = response_data
+
+        # Save report row for report table history.
+        report_id = f"RPT-{datetime.now().strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6].upper()}"
+        report_row = {
+            'report_id': report_id,
+            'report_name': f"PM25_Report_{vis_timestamp}",
+            'image_name': filename,
+            'date': response_data['timestamp'],
+            'pm25': float(round(pm25_value, 2)),
+            'status': 'Completed',
+            'created_at': datetime.now().isoformat(),
+            'analysis_data': response_data
+        }
+        append_report_row(report_row)
+        response_data['report_id'] = report_id
         
         print("✓ Analysis complete!")
         return jsonify(response_data)
@@ -196,6 +392,7 @@ def analyze():
 
 
 @app.route('/about')
+@login_required(require_json=True)
 def about():
     """Return information about the system."""
     info = {
@@ -230,6 +427,7 @@ def health():
 
 
 @app.route('/download_report', methods=['POST'])
+@login_required(require_json=True)
 def download_report():
     """
     Generate and download a PDF report of analysis results.
@@ -244,11 +442,13 @@ def download_report():
     - health_advice: health advice text
     """
     try:
-        # Get analysis data from request
-        data = request.get_json()
-        
+        # Accept explicit payload, fallback to latest session report.
+        data = request.get_json(silent=True)
         if not data:
-            return jsonify({'error': 'No data provided'}), 400
+            data = session.get('last_analysis')
+
+        if not data:
+            return jsonify({'error': 'No report data available. Run analysis first.'}), 400
         
         # Generate PDF report
         print("Generating PDF report...")
@@ -275,6 +475,29 @@ def download_report():
             'error': f'PDF generation failed: {str(e)}',
             'details': traceback.format_exc()
         }), 500
+
+
+@app.route('/download_report/<report_id>')
+@login_required()
+def download_report_by_id(report_id):
+    """Generate and download PDF for a specific report row."""
+    row = get_report_row(report_id)
+    if not row:
+        return jsonify({'error': 'Report not found'}), 404
+
+    try:
+        pdf_buffer = generate_report_pdf(row['analysis_data'])
+        filename = f"{row.get('report_name', report_id)}.pdf"
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        print(f"✗ Error generating report by id: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({'error': f'Failed to generate report: {str(e)}'}), 500
 
 
 if __name__ == '__main__':
