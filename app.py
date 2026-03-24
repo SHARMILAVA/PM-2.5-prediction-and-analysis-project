@@ -8,12 +8,15 @@ Author: PM2.5 Estimation System
 from flask import Flask, render_template, request, jsonify, url_for, send_file, redirect, session
 import os
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import traceback
 import json
 import numpy as np
 from functools import wraps
 import uuid
+import sqlite3
+import re
 
 # Import our custom modules
 from image_analysis import ImageAnalyzer
@@ -56,6 +59,60 @@ os.makedirs(app.config['RESULTS_FOLDER'], exist_ok=True)
 os.makedirs('data', exist_ok=True)
 
 REPORT_HISTORY_FILE = 'data/report_history.json'
+USERS_DB_FILE = 'data/users.db'
+
+
+def get_db_connection():
+    """Create a sqlite connection with dict-like row access."""
+    conn = sqlite3.connect(USERS_DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_user_db():
+    """Initialize users table used for authentication."""
+    conn = get_db_connection()
+    conn.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )
+        '''
+    )
+    conn.commit()
+    conn.close()
+
+
+def is_valid_email(email):
+    """Basic email format check for server-side validation."""
+    pattern = r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
+    return bool(re.match(pattern, email))
+
+
+def get_user_by_email(email):
+    """Fetch a user by email."""
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+    conn.close()
+    return user
+
+
+def create_user(username, email, password):
+    """Create a new user with a securely hashed password."""
+    password_hash = generate_password_hash(password)
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            'INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, ?)',
+            (username, email, password_hash, datetime.now().isoformat())
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def allowed_file(filename):
@@ -168,9 +225,23 @@ def login():
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
 
+        if not email or not password:
+            return render_template('login.html', error='Email and password are required.')
+
+        if not is_valid_email(email):
+            return render_template('login.html', error='Please enter a valid email address.')
+
+        user = get_user_by_email(email)
+        if user and check_password_hash(user['password_hash'], password):
+            session['authenticated'] = True
+            session['user_email'] = user['email']
+            session['username'] = user['username']
+            return redirect(url_for('home'))
+
         if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
             session['authenticated'] = True
             session['user_email'] = ADMIN_EMAIL
+            session['username'] = 'Admin'
             return redirect(url_for('home'))
 
         return render_template('login.html', error='Invalid email or password.')
@@ -178,7 +249,63 @@ def login():
     if is_logged_in():
         return redirect(url_for('home'))
 
-    return render_template('login.html')
+    success_message = request.args.get('success')
+    return render_template('login.html', success=success_message)
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    """Render signup page and register a new user."""
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+
+        if not username or not email or not password:
+            return render_template('signup.html', error='All fields are required.', form_data={'username': username, 'email': email})
+
+        if not is_valid_email(email):
+            return render_template('signup.html', error='Please enter a valid email address.', form_data={'username': username, 'email': email})
+
+        if get_user_by_email(email):
+            return render_template('signup.html', error='An account with this email already exists.', form_data={'username': username, 'email': email})
+
+        try:
+            create_user(username, email, password)
+        except sqlite3.IntegrityError:
+            return render_template('signup.html', error='An account with this email already exists.', form_data={'username': username, 'email': email})
+
+        return redirect(url_for('login', success='Account created successfully. Please login.'))
+
+    if is_logged_in():
+        return redirect(url_for('home'))
+
+    return render_template('signup.html', form_data={'username': '', 'email': ''})
+
+
+@app.route('/api/signup', methods=['POST'])
+def signup_api():
+    """JSON API for client-side signup requests."""
+    data = request.get_json(silent=True) or {}
+    username = str(data.get('username', '')).strip()
+    email = str(data.get('email', '')).strip().lower()
+    password = str(data.get('password', ''))
+
+    if not username or not email or not password:
+        return jsonify({'success': False, 'error': 'All fields are required.'}), 400
+
+    if not is_valid_email(email):
+        return jsonify({'success': False, 'error': 'Please provide a valid email address.'}), 400
+
+    if get_user_by_email(email):
+        return jsonify({'success': False, 'error': 'Email is already registered.'}), 409
+
+    try:
+        create_user(username, email, password)
+    except sqlite3.IntegrityError:
+        return jsonify({'success': False, 'error': 'Email is already registered.'}), 409
+
+    return jsonify({'success': True, 'message': 'Signup successful. Please login.'}), 201
 
 
 @app.route('/logout')
@@ -498,6 +625,9 @@ def download_report_by_id(report_id):
         print(f"✗ Error generating report by id: {str(e)}")
         print(traceback.format_exc())
         return jsonify({'error': f'Failed to generate report: {str(e)}'}), 500
+
+
+init_user_db()
 
 
 if __name__ == '__main__':

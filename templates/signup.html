@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - PM2.5 Estimation System</title>
+    <title>Sign Up - PM2.5 Estimation System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,9 +12,9 @@
     <main class="login-shell">
         <section class="login-card">
             <div class="login-brand">
-                <span class="brand-chip"><i class="fas fa-wind"></i> PM2.5</span>
-                <h1>Secure Access</h1>
-                <p>Sign in to continue to the PM2.5 estimation dashboard.</p>
+                <span class="brand-chip"><i class="fas fa-user-plus"></i> PM2.5</span>
+                <h1>Create Account</h1>
+                <p>Register a new account to access the PM2.5 estimation dashboard.</p>
             </div>
 
             {% if error %}
@@ -24,29 +24,25 @@
             </div>
             {% endif %}
 
-            {% if success %}
-            <div class="login-success">
-                <i class="fas fa-circle-check"></i>
-                <span>{{ success }}</span>
-            </div>
-            {% endif %}
-
             <form method="POST" class="login-form" autocomplete="off">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" value="{{ form_data.username if form_data else '' }}" required>
+
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" placeholder="admin@gmail.com" required>
+                <input type="email" id="email" name="email" placeholder="Enter your email" value="{{ form_data.email if form_data else '' }}" required>
 
                 <label for="password">Password</label>
                 <div class="password-field">
-                    <input type="password" id="password" name="password" placeholder="Enter password" required>
+                    <input type="password" id="password" name="password" placeholder="Create a password" required>
                     <button type="button" class="password-toggle" data-target="password" aria-label="Show password">
                         <i class="fa-solid fa-eye"></i>
                     </button>
                 </div>
 
-                <button type="submit" class="btn-primary login-btn">Login</button>
+                <button type="submit" class="btn-primary login-btn">Create Account</button>
             </form>
 
-            <a href="{{ url_for('signup') }}" class="btn-secondary auth-alt-btn">Sign Up</a>
+            <a href="{{ url_for('login') }}" class="btn-secondary auth-alt-btn">Back to Login</a>
         </section>
     </main>
     <script>

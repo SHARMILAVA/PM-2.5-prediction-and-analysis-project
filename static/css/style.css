@@ -316,6 +316,37 @@ a {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.password-field {
+    position: relative;
+}
+
+.password-field input {
+    padding-right: 44px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.password-toggle:hover {
+    color: #1e3a8a;
+    background: #eff6ff;
+}
+
 .login-form input:focus {
     border-color: var(--secondary);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
@@ -337,6 +368,44 @@ a {
     gap: 8px;
     font-size: 0.9rem;
     font-weight: 600;
+}
+
+.login-success {
+    margin-top: 16px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #dcfce7;
+    border: 1px solid #bbf7d0;
+    color: #14532d;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.btn-secondary {
+    width: 100%;
+    padding: 12px 20px;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    background: #eff6ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+}
+
+.btn-secondary:hover {
+    background: #dbeafe;
+    transform: translateY(-1px);
+}
+
+.auth-alt-btn {
+    margin-top: 12px;
 }
 
 .info-card {
