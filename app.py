@@ -462,6 +462,14 @@ def analyze():
             print(f"✗ WARNING: Feature chart file not found at {features_chart_path}")
         
         # Prepare response with all results
+        # Use safe numeric fallbacks so UI fields are always present.
+        def safe_feature_value(key, default=0.0):
+            value = features.get(key, default)
+            try:
+                return float(round(float(value), 2))
+            except (TypeError, ValueError):
+                return float(default)
+
         response_data = {
             'success': True,
             'pm25': float(pm25_value),
@@ -470,12 +478,12 @@ def analyze():
             'aqi_color': estimation_results['aqi_color'],
             'health_advice': estimation_results['health_advice'],
             'features': {
-                'haze_score': float(round(features['haze_score'], 2)),
-                'turbidity': float(round(features['turbidity'], 2)),
-                'visibility': float(round(features['visibility'], 2)),
-                'contrast': float(round(features['contrast'], 2)),
-                'brightness': float(round(features['brightness'], 2)),
-                'saturation': float(round(features['saturation'], 2))
+                'haze_score': safe_feature_value('haze_score', 50.0),
+                'turbidity': safe_feature_value('turbidity', 0.0),
+                'visibility': safe_feature_value('visibility', 0.0),
+                'contrast': safe_feature_value('contrast', 0.0),
+                'brightness': safe_feature_value('brightness', 0.0),
+                'saturation': safe_feature_value('saturation', 0.0)
             },
             'images': {
                 'original': url_for('static', filename=f'uploads/{unique_filename}'),
