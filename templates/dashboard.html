@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PM2.5 Estimation System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <h2>PM2.5 Panel</h2>
+                <p>PROJECT NAVIGATION</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('home') }}" class="nav-link {% if page == 'home' %}active{% endif %}"><i class="fas fa-house"></i> <span>HOME</span></a>
+                <a href="{{ url_for('analysis') }}" class="nav-link {% if page == 'analysis' %}active{% endif %}"><i class="fas fa-microscope"></i> <span>ANALYSIS</span></a>
+                <a href="{{ url_for('report') }}" class="nav-link {% if page == 'report' %}active{% endif %}"><i class="fas fa-file-lines"></i> <span>REPORT</span></a>
+                <a href="{{ url_for('account') }}" class="nav-link {% if page == 'account' %}active{% endif %}"><i class="fas fa-user-circle"></i> <span>ACCOUNT</span></a>
+            </nav>
+            <div class="sidebar-bottom">
+                <a href="{{ url_for('logout') }}" class="nav-link logout-link"><i class="fas fa-right-from-bracket"></i> <span>LOGOUT</span></a>
+            </div>
+        </aside>
+
+        <div class="main-shell">
+            <header class="topbar">
+                <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="topbar-copy">
+                    <h1>PM2.5 Estimation System</h1>
+                    <p>High-Resolution Satellite Image Analysis for Air Quality Assessment</p>
+                </div>
+                <a href="{{ url_for('home') }}" class="pm-logo" title="Go to home">
+                    <span class="logo-mark"><i class="fas fa-wind"></i></span>
+                    <span class="logo-text">PM2.5</span>
+                </a>
+            </header>
+
+            <main class="content-area">
+                {% if page == 'home' %}
+                <section class="card info-card">
+                    <div class="home-top-banner">
+                        <span class="home-top-chip"><i class="fas fa-circle-info"></i> Public Advisory</span>
+                        <h1>National PM2.5 Information Dashboard</h1>
+                        <p>Standardized guidance and interpretation support for PM2.5 prediction outputs.</p>
+                    </div>
+                    <div class="card-header"><h2>PM2.5 Public Information</h2></div>
+                    <p class="card-desc">Reference guidance in a standardized format similar to official public air-quality advisory pages.</p>
+                    <div class="home-guidance-grid">
+                        <div class="quick-item info-only">
+                            <i class="fas fa-lungs"></i>
+                            <h3>What Is PM2.5?</h3>
+                            <p>PM2.5 refers to fine particulate matter with diameter less than 2.5 micrometers. These particles can penetrate deep into lungs and enter the bloodstream, increasing respiratory and cardiovascular risk.</p>
+                        </div>
+                        <div class="quick-item info-only">
+                            <i class="fas fa-industry"></i>
+                            <h3>Major Causes</h3>
+                            <p>Common causes include vehicle exhaust, industrial emissions, fossil-fuel combustion, construction dust, crop residue burning, and secondary atmospheric reactions under stagnant weather conditions.</p>
+                        </div>
+                        <div class="quick-item info-only">
+                            <i class="fas fa-sliders"></i>
+                            <h3>How Parameters Affect Prediction</h3>
+                            <p>Higher haze score and turbidity generally indicate heavier aerosol loading. Lower visibility and contrast often indicate denser particulate presence. Brightness and saturation shifts can reflect scattering and atmospheric pollution intensity.</p>
+                        </div>
+                        <div class="quick-item info-only">
+                            <i class="fas fa-shield-heart"></i>
+                            <h3>Health Advisory Concept</h3>
+                            <p>As PM2.5 levels rise, precaution intensity increases: reduce outdoor exertion, use protective masks in polluted zones, and prioritize indoor ventilation control for sensitive groups.</p>
+                        </div>
+                        <div class="quick-item info-only">
+                            <i class="fas fa-cloud-sun"></i>
+                            <h3>Environmental Context</h3>
+                            <p>Meteorology influences PM2.5 significantly. Temperature inversion, low wind speed, and dry-season dust accumulation can increase pollution persistence and reduce dispersion.</p>
+                        </div>
+                        <div class="quick-item info-only">
+                            <i class="fas fa-clipboard-check"></i>
+                            <h3>Interpretation Note</h3>
+                            <p>Predictions are decision-support indicators based on image-derived features. Final policy action should combine these outputs with calibrated monitoring station observations.</p>
+                        </div>
+                    </div>
+                </section>
+                {% elif page == 'analysis' %}
+                <section class="upload-section" id="upload-section">
+                    <div class="card">
+                        <div class="card-header"><h2>Upload Satellite Image</h2></div>
+                        <p class="card-desc">Upload a satellite image to estimate PM2.5 concentration, extract atmospheric features, and generate comprehensive visualizations.</p>
+                        <form id="uploadForm" enctype="multipart/form-data">
+                            <div class="file-drop-zone" id="dropZone">
+                                <input type="file" id="satellite_image" name="satellite_image" accept="image/*" required>
+                                <div class="drop-content">
+                                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    <p class="drop-text" id="file-name">Drag &amp; drop or click to select an image</p>
+                                    <span class="drop-hint">PNG, JPG, JPEG, TIFF, BMP - Max 16 MB</span>
+                                </div>
+                            </div>
+                            <div id="upload-preview" class="upload-preview" style="display:none;">
+                                <img id="preview-img" src="" alt="Preview">
+                                <button type="button" class="remove-preview" id="removePreview">&times;</button>
+                            </div>
+                            <button type="submit" class="btn-primary" id="analyzeBtn">Analyze Image</button>
+                        </form>
+                        <div id="loading" class="loading" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>Processing satellite image - extracting features and estimating PM2.5...</p>
+                            <div class="progress-bar-track"><div class="progress-bar-fill" id="progressBar"></div></div>
+                        </div>
+                    </div>
+                </section>
+                <div id="error-message" class="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="error-text"></span>
+                </div>
+                <div id="success-message" class="success-message" style="display: none;">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="success-text">Analysis completed successfully!</span>
+                </div>
+                <section id="results" class="results-section" style="display: {% if analysis_data %}block{% else %}none{% endif %};">
+                    <div class="card result-card" id="result-original">
+                        <div class="card-header"><h2>Original Satellite Image</h2></div>
+                        <div class="image-container"><img id="original-image" src="" alt="Original" class="result-image"></div>
+                    </div>
+                    <div class="card result-card pipeline-card" id="result-preprocessing-pipeline">
+                        <div class="card-header">
+                            <h2>Image Preprocessing Pipeline</h2>
+                            <span class="pipeline-chip"><i class="fas fa-wave-square"></i> Real-time Vision Flow</span>
+                        </div>
+                        <p class="card-desc">Operational stages used by the intelligent environmental monitoring engine before PM2.5 prediction.</p>
+
+                        <div class="pipeline-steps-grid" id="pipeline-step-icons">
+                            <div class="pipeline-step"><i class="fas fa-up-right-and-down-left-from-center"></i><span>Resize</span></div>
+                            <div class="pipeline-step"><i class="fas fa-filter"></i><span>Noise Removal</span></div>
+                            <div class="pipeline-step"><i class="fas fa-sliders"></i><span>Normalized (Min-Max)</span></div>
+                            <div class="pipeline-step"><i class="fas fa-circle-half-stroke"></i><span>Contrast</span></div>
+                        </div>
+
+                        <div class="pipeline-images-grid">
+                            <article class="pipeline-image-card">
+                                <h3>Original Image</h3>
+                                <div class="image-container"><img id="pipeline-original-image" src="" alt="Pipeline original image" class="result-image"></div>
+                            </article>
+                            <article class="pipeline-image-card">
+                                <h3>Resized Image</h3>
+                                <div class="image-container"><img id="pipeline-resized-image" src="" alt="Pipeline resized image" class="result-image"></div>
+                            </article>
+                            <article class="pipeline-image-card">
+                                <h3>Denoised Image</h3>
+                                <div class="image-container"><img id="pipeline-denoised-image" src="" alt="Pipeline denoised image" class="result-image"></div>
+                            </article>
+                            <article class="pipeline-image-card">
+                                <h3>Normalized Image (Min-Max)</h3>
+                                <div class="image-container"><img id="pipeline-normalized-image" src="" alt="Pipeline normalized image" class="result-image"></div>
+                            </article>
+                            <article class="pipeline-image-card">
+                                <h3>Contrast Image</h3>
+                                <div class="image-container"><img id="pipeline-contrast-image" src="" alt="Pipeline contrast image" class="result-image"></div>
+                            </article>
+                        </div>
+                    </div>
+                    <div class="card result-card" id="result-segmentation">
+                        <div class="card-header"><h2>Segmentation</h2></div>
+                        <p class="card-desc">K-means clustering based segmentation output generated after preprocessing.</p>
+                        <div class="image-container"><img id="segmentation-image" src="" alt="K-means segmentation image" class="result-image"></div>
+                    </div>
+                    <div class="card result-card" id="result-summary">
+                        <div class="card-header"><h2>PM2.5 Estimation Results</h2></div>
+                        <div class="pm25-display">
+                            <div class="pm25-main">
+                                <div class="pm25-value-wrap">
+                                    <span class="pm25-label">Estimated PM2.5</span>
+                                    <span id="pm25-number" class="pm25-number">--</span>
+                                    <span class="pm25-unit">microg/m3</span>
+                                </div>
+                                <div id="aqi-badge" class="aqi-badge"><span id="aqi-category">--</span></div>
+                            </div>
+                            <div class="pm25-meta">
+                                <div class="meta-item"><span class="meta-label">Confidence</span><span class="meta-value" id="confidence">--%</span></div>
+                                <div class="meta-item"><span class="meta-label">Timestamp</span><span class="meta-value" id="timestamp">--</span></div>
+                            </div>
+                        </div>
+                        <div class="health-advice" id="health-advice">--</div>
+                    </div>
+                    <div class="card result-card" id="result-features">
+                        <div class="card-header"><h2>Atmospheric Features</h2></div>
+                        <div class="features-grid">
+                            <div class="feature-item"><span class="feature-label">Haze Score</span><span class="feature-value" id="feature-haze">--</span><div class="feature-bar"><div class="feature-bar-fill haze" id="bar-haze"></div></div></div>
+                            <div class="feature-item"><span class="feature-label">Turbidity</span><span class="feature-value" id="feature-turbidity">--</span><div class="feature-bar"><div class="feature-bar-fill turbidity" id="bar-turbidity"></div></div></div>
+                            <div class="feature-item"><span class="feature-label">Visibility</span><span class="feature-value" id="feature-visibility">--</span><div class="feature-bar"><div class="feature-bar-fill visibility" id="bar-visibility"></div></div></div>
+                            <div class="feature-item"><span class="feature-label">Contrast</span><span class="feature-value" id="feature-contrast">--</span><div class="feature-bar"><div class="feature-bar-fill contrast" id="bar-contrast"></div></div></div>
+                            <div class="feature-item"><span class="feature-label">Brightness</span><span class="feature-value" id="feature-brightness">--</span><div class="feature-bar"><div class="feature-bar-fill brightness" id="bar-brightness"></div></div></div>
+                            <div class="feature-item"><span class="feature-label">Saturation</span><span class="feature-value" id="feature-saturation">--</span><div class="feature-bar"><div class="feature-bar-fill saturation" id="bar-saturation"></div></div></div>
+                        </div>
+                    </div>
+                    <div class="card result-card" id="result-feature-chart">
+                        <div class="card-header"><h2>Feature Analysis Graph</h2></div>
+                        <div class="image-container"><img id="features-chart" src="" alt="Feature Chart" class="result-image"></div>
+                    </div>
+                    <div class="card result-card" id="result-heatmap">
+                        <div class="card-header"><h2>PM2.5 Intelligent Monitoring Heatmap</h2></div>
+                        <div class="heatmap-split-view">
+                            <div class="heatmap-pane">
+                                <h3>Original Image</h3>
+                                <div class="image-container"><img id="heatmap-original-image" src="" alt="Heatmap original image" class="result-image"></div>
+                            </div>
+                            <div class="heatmap-pane">
+                                <h3>PM2.5 Heatmap</h3>
+                                <div class="image-container"><img id="heatmap-image" src="" alt="PM2.5 Heatmap" class="result-image"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card result-card" id="result-dehazed">
+                        <div class="card-header"><h2>PM2.5 Removal - Dehazed Image</h2></div>
+                        <div class="image-container"><img id="dehazed-image" src="" alt="Dehazed Image" class="result-image"></div>
+                    </div>
+                    <div class="card result-card" id="result-before-after">
+                        <div class="card-header"><h2>Before &amp; After Comparison</h2></div>
+                        <div class="image-container"><img id="before-after-image" src="" alt="Before/After" class="result-image"></div>
+                    </div>
+                    <div class="card result-card" id="result-session">
+                        <div class="card-header"><h2>Report Session</h2></div>
+                        <p class="card-desc">Analysis has been saved to the report session successfully.</p>
+                        <div class="download-section">
+                            <button class="btn-download-secondary" id="resetBtn"><i class="fas fa-redo"></i> Analyze Another Image</button>
+                        </div>
+                    </div>
+                </section>
+                {% elif page == 'account' %}
+                <section class="card info-card">
+                    <div class="card-header"><h2>Account</h2></div>
+                    <p class="card-desc">Current signed-in account details.</p>
+                    <div class="account-grid account-grid-neat">
+                        <div class="account-item">
+                            <span class="meta-label">Email</span>
+                            <span class="meta-value">{{ user_email }}</span>
+                        </div>
+                        <div class="account-item">
+                            <span class="meta-label">Role</span>
+                            <span class="meta-value">Administrator</span>
+                        </div>
+                        <div class="account-item">
+                            <span class="meta-label">Access Level</span>
+                            <span class="meta-value">Full dashboard + report generation</span>
+                        </div>
+                        <div class="account-item">
+                            <span class="meta-label">Session</span>
+                            <span class="meta-value">Secured login required</span>
+                        </div>
+                    </div>
+                </section>
+                {% elif page == 'report' %}
+                <section class="card info-card">
+                    <div class="card-header"><h2>Report Session</h2></div>
+                    <p class="card-desc">Standardized report view with key parameters, recommendations, and preventive measures.</p>
+
+                    <div class="report-table-wrap">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Report Name</th>
+                                    <th>Image Name</th>
+                                    <th>Date</th>
+                                    <th>PM2.5 Value</th>
+                                    <th>Status</th>
+                                    <th>Download PDF</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if report_rows %}
+                                    {% for row in report_rows %}
+                                    <tr>
+                                        <td>{{ row.report_name }}</td>
+                                        <td>{{ row.image_name }}</td>
+                                        <td>{{ row.date }}</td>
+                                        <td>{{ '%.2f'|format(row.pm25) }}</td>
+                                        <td><span class="status-pill">{{ row.status }}</span></td>
+                                        <td>
+                                            <a class="btn-table-download" href="{{ url_for('download_report_by_id', report_id=row.report_id) }}">
+                                                Download PDF
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6">No reports yet. Run analysis to add report rows.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if analysis_data %}
+                    <div class="pm25-display report-summary-box">
+                        <div class="pm25-main">
+                            <div class="pm25-value-wrap">
+                                <span class="pm25-label">Estimated PM2.5</span>
+                                <span class="pm25-number">{{ '%.1f'|format(analysis_data.pm25) }}</span>
+                                <span class="pm25-unit">microg/m3</span>
+                            </div>
+                            <div class="aqi-badge">
+                                <span>{{ analysis_data.aqi_category }}</span>
+                            </div>
+                        </div>
+                        <div class="pm25-meta">
+                            <div class="meta-item"><span class="meta-label">Confidence</span><span class="meta-value">{{ analysis_data.confidence|round|int }}%</span></div>
+                            <div class="meta-item"><span class="meta-label">Timestamp</span><span class="meta-value">{{ analysis_data.timestamp }}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="report-grid">
+                        <div class="report-panel">
+                            <h3>Parameters</h3>
+                            <div class="report-params">
+                                <div><span>Haze Score</span><strong>{{ analysis_data.features.haze_score }}</strong></div>
+                                <div><span>Turbidity</span><strong>{{ analysis_data.features.turbidity }}</strong></div>
+                                <div><span>Visibility</span><strong>{{ analysis_data.features.visibility }}</strong></div>
+                                <div><span>Contrast</span><strong>{{ analysis_data.features.contrast }}</strong></div>
+                                <div><span>Brightness</span><strong>{{ analysis_data.features.brightness }}</strong></div>
+                                <div><span>Saturation</span><strong>{{ analysis_data.features.saturation }}</strong></div>
+                            </div>
+                        </div>
+
+                        <div class="report-panel">
+                            <h3>Suggestion</h3>
+                            <p class="report-advice">{{ analysis_data.health_advice }}</p>
+                            <h3>Risk Measures</h3>
+                            <ul class="report-list compact-list">
+                                {% for measure in risk_measures %}
+                                <li>{{ measure }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card result-card downloads-card report-download-card">
+                        <div class="card-header"><h2>Download Report PDF</h2></div>
+                        <p class="card-desc">Download the latest report session as a PDF document.</p>
+                        <div class="download-section">
+                            <button class="btn-download" id="downloadPdfBtn"><i class="fas fa-file-pdf"></i> Download Full Report (PDF)</button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-report">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                        <h3>No report session yet</h3>
+                        <p>Run an analysis first to populate report parameters, suggestion, and risk measures.</p>
+                    </div>
+                    {% endif %}
+                </section>
+                {% endif %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+        }
+
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 900) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        });
+    </script>
+
+    {% if page == 'analysis' %}
+    <script>
+        const persistedAnalysis = {{ analysis_data|tojson if analysis_data else 'null' }};
+
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            errorText.textContent = message;
+            errorEl.style.display = 'flex';
+            setTimeout(() => { errorEl.style.display = 'none'; }, 6000);
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('success-message');
+            const successText = document.getElementById('success-text');
+            successText.textContent = message;
+            successEl.style.display = 'flex';
+            setTimeout(() => { successEl.style.display = 'none'; }, 5000);
+        }
+
+        const fileInput = document.getElementById('satellite_image');
+        const dropZone = document.getElementById('dropZone');
+        const previewWrap = document.getElementById('upload-preview');
+        const previewImg = document.getElementById('preview-img');
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (!isValidImageFile(file)) {
+                    showError('Invalid file type. Please upload an image (PNG, JPG, JPEG, TIFF, BMP).');
+                    fileInput.value = '';
+                    return;
+                }
+                document.getElementById('file-name').textContent = file.name;
+                showPreview(file);
+            }
+        });
+
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                const file = e.dataTransfer.files[0];
+                if (!isValidImageFile(file)) {
+                    showError('Invalid file type. Please upload an image (PNG, JPG, JPEG, TIFF, BMP).');
+                    fileInput.value = '';
+                    return;
+                }
+                document.getElementById('file-name').textContent = file.name;
+                showPreview(file);
+            }
+        });
+
+        function isValidImageFile(file) {
+            const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/tiff', 'image/bmp'];
+            return validTypes.includes(file.type);
+        }
+
+        function showPreview(file) {
+            const r = new FileReader();
+            r.onload = e => {
+                previewImg.src = e.target.result;
+                previewWrap.style.display = 'block';
+            };
+            r.readAsDataURL(file);
+        }
+
+        document.getElementById('removePreview').addEventListener('click', () => {
+            previewWrap.style.display = 'none';
+            fileInput.value = '';
+            document.getElementById('file-name').textContent = 'Drag & drop or click to select an image';
+        });
+
+        let progressInterval;
+        function startProgress() {
+            let w = 0;
+            const bar = document.getElementById('progressBar');
+            bar.style.width = '0%';
+            progressInterval = setInterval(() => {
+                if (w < 90) {
+                    w += Math.random() * 8;
+                    if (w > 90) w = 90;
+                    bar.style.width = w + '%';
+                }
+            }, 400);
+        }
+
+        function completeProgress() {
+            clearInterval(progressInterval);
+            document.getElementById('progressBar').style.width = '100%';
+        }
+
+        document.getElementById('resetBtn')?.addEventListener('click', () => {
+            location.reload();
+        });
+
+        function renderPipeline(data) {
+            if (!data || !data.preprocessing) {
+                return;
+            }
+
+            const pipelineIconsWrap = document.getElementById('pipeline-step-icons');
+            if (pipelineIconsWrap && Array.isArray(data.preprocessing.steps)) {
+                pipelineIconsWrap.innerHTML = data.preprocessing.steps
+                    .map(step => `
+                        <div class="pipeline-step">
+                            <i class="fas ${step.icon || 'fa-circle-dot'}"></i>
+                            <span>${step.title}</span>
+                        </div>
+                    `)
+                    .join('');
+            }
+
+            const pipelineMap = {
+                'pipeline-original-image': data.preprocessing.images?.original,
+                'pipeline-resized-image': data.preprocessing.images?.resized,
+                'pipeline-denoised-image': data.preprocessing.images?.denoised,
+                'pipeline-normalized-image': data.preprocessing.images?.normalized,
+                'pipeline-contrast-image': data.preprocessing.images?.contrast
+            };
+
+            Object.entries(pipelineMap).forEach(([id, src]) => {
+                const node = document.getElementById(id);
+                if (!node || !src) {
+                    return;
+                }
+                node.src = src;
+                node.onerror = function() {
+                    this.alt = 'Pipeline image failed to load';
+                };
+            });
+        }
+
+        function renderSegmentation(data) {
+            const segmentedNode = document.getElementById('segmentation-image');
+            if (!segmentedNode || !data || !data.segmentation || !data.segmentation.image) {
+                return;
+            }
+
+            segmentedNode.src = data.segmentation.image;
+            segmentedNode.onerror = function() {
+                this.alt = 'Segmentation image failed to load';
+            };
+        }
+
+        function renderAnalysisData(data, showMessage = false) {
+            if (!data) return;
+
+            document.getElementById('pm25-number').textContent = Number(data.pm25).toFixed(1);
+            document.getElementById('aqi-category').textContent = data.aqi_category;
+            document.getElementById('aqi-badge').style.background = data.aqi_color;
+            document.getElementById('confidence').textContent = Math.round(data.confidence) + '%';
+            document.getElementById('timestamp').textContent = data.timestamp;
+            document.getElementById('health-advice').textContent = data.health_advice;
+
+            Object.keys(data.features).forEach(key => {
+                const id = key === 'haze_score' ? 'haze' : key.replace(/_/g, '-');
+                const el = document.getElementById(`feature-${id}`);
+                const bar = document.getElementById(`bar-${id}`);
+                if (el) {
+                    el.textContent = data.features[key];
+                    if (bar) {
+                        const percentage = Math.min(data.features[key], 100);
+                        bar.style.width = percentage + '%';
+                    }
+                }
+            });
+
+            const images = [
+                { id: 'original-image', src: data.images.original },
+                { id: 'heatmap-original-image', src: data.images.original },
+                { id: 'heatmap-image', src: data.images.heatmap },
+                { id: 'dehazed-image', src: data.images.dehazed },
+                { id: 'before-after-image', src: data.images.before_after },
+                { id: 'features-chart', src: data.images.features_chart }
+            ];
+
+            images.forEach(img => {
+                const element = document.getElementById(img.id);
+                if (element) {
+                    element.src = img.src;
+                    element.onerror = function() {
+                        this.alt = 'Image failed to load: ' + img.src;
+                    };
+                }
+            });
+
+            renderPipeline(data);
+            renderSegmentation(data);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+
+            if (showMessage) {
+                showSuccess('Analysis completed and saved to report session.');
+            }
+        }
+
+        if (persistedAnalysis) {
+            renderAnalysisData(persistedAnalysis, false);
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showError('Please select an image file.');
+                return;
+            }
+
+            if (!isValidImageFile(file)) {
+                showError('Invalid file type. Please upload an image (PNG, JPG, JPEG, TIFF, BMP).');
+                return;
+            }
+
+            if (file.size > 16 * 1024 * 1024) {
+                showError('File size exceeds 16MB limit.');
+                return;
+            }
+
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('analyzeBtn').disabled = true;
+
+            startProgress();
+            const formData = new FormData();
+            formData.append('satellite_image', file);
+
+            try {
+                const response = await fetch('/analyze', { method: 'POST', body: formData });
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                const data = await response.json();
+                completeProgress();
+
+                if (!response.ok || data.error) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+
+                renderAnalysisData(data, false);
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                showSuccess('Analysis completed and saved to report session.');
+            } catch (error) {
+                showError(error.message || 'Analysis failed. Please try again.');
+                document.getElementById('loading').style.display = 'none';
+            } finally {
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        });
+    </script>
+    {% endif %}
+
+    {% if page == 'report' and analysis_data %}
+    <script>
+        document.getElementById('downloadPdfBtn')?.addEventListener('click', async () => {
+            const btn = document.getElementById('downloadPdfBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+
+            try {
+                const response = await fetch('/download_report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                if (!response.ok) throw new Error('Failed to generate PDF');
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `PM25_Report_${new Date().getTime()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                alert('Failed to download PDF: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-file-pdf"></i> Download Full Report (PDF)';
+            }
+        });
+    </script>
+    {% endif %}
+</body>
+</html>

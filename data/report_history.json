@@ -1,0 +1,408 @@
+[
+  {
+    "report_id": "RPT-20260308214704-7A9086",
+    "report_name": "PM25_Report_20260308_214652",
+    "image_name": "satellite_image_3.jpeg",
+    "date": "2026-03-08 21:47:04",
+    "pm25": 15.3,
+    "status": "Completed",
+    "created_at": "2026-03-08T21:47:04.340528",
+    "analysis_data": {
+      "success": true,
+      "pm25": 15.3,
+      "confidence": 84.2,
+      "aqi_category": "Moderate",
+      "aqi_color": "#FFFF00",
+      "health_advice": "Air quality is acceptable. However, there may be a risk for some people.",
+      "features": {
+        "haze_score": 41.14,
+        "turbidity": 34.14,
+        "visibility": 94.66999816894531,
+        "contrast": 63.79,
+        "brightness": 105.6,
+        "saturation": 77.53
+      },
+      "images": {
+        "original": "/static/uploads/20260308_214652_satellite_image_3.jpeg",
+        "heatmap": "/static/results/heatmap_20260308_214652.png",
+        "dehazed": "/static/results/dehazed_20260308_214652.png",
+        "before_after": "/static/results/before_after_20260308_214652.png",
+        "timeseries": "/static/results/timeseries_20260308_214652.png",
+        "features_chart": "/static/results/features_20260308_214652.png"
+      },
+      "timestamp": "2026-03-08 21:47:04"
+    }
+  },
+  {
+    "report_id": "RPT-20260328221340-30B5F5",
+    "report_name": "PM25_Report_20260328_221326",
+    "image_name": "satellite_image_5.jpeg",
+    "date": "2026-03-28 22:13:40",
+    "pm25": 24.74,
+    "status": "Completed",
+    "created_at": "2026-03-28T22:13:40.227633",
+    "analysis_data": {
+      "success": true,
+      "pm25": 24.74,
+      "confidence": 78.3,
+      "aqi_category": "Moderate",
+      "aqi_color": "#FFFF00",
+      "health_advice": "Air quality is acceptable. However, there may be a risk for some people.",
+      "features": {
+        "haze_score": 32.15,
+        "turbidity": 31.55,
+        "visibility": 82.61000061035156,
+        "contrast": 31.07,
+        "brightness": 104.82,
+        "saturation": 76.8
+      },
+      "images": {
+        "original": "/static/uploads/20260328_221326_satellite_image_5.jpeg",
+        "heatmap": "/static/results/heatmap_20260328_221326.png",
+        "dehazed": "/static/results/dehazed_20260328_221326.png",
+        "before_after": "/static/results/before_after_20260328_221326.png",
+        "timeseries": "/static/results/timeseries_20260328_221326.png",
+        "features_chart": "/static/results/features_20260328_221326.png"
+      },
+      "preprocessing": {
+        "steps": [
+          {
+            "key": "resized",
+            "title": "Resize (Bilinear Interpolation)",
+            "icon": "fa-up-right-and-down-left-from-center",
+            "image": "/static/results/pipeline_20260328_221326_resized.png"
+          },
+          {
+            "key": "denoised",
+            "title": "Gaussian Filter (Noise Removal)",
+            "icon": "fa-filter",
+            "image": "/static/results/pipeline_20260328_221326_denoised.png"
+          },
+          {
+            "key": "normalized",
+            "title": "Normalization",
+            "icon": "fa-sliders",
+            "image": "/static/results/pipeline_20260328_221326_normalized.png"
+          },
+          {
+            "key": "enhanced",
+            "title": "CLAHE (Contrast Enhancement)",
+            "icon": "fa-circle-half-stroke",
+            "image": "/static/results/pipeline_20260328_221326_enhanced.png"
+          },
+          {
+            "key": "segmented",
+            "title": "Segmentation",
+            "icon": "fa-layer-group",
+            "image": "/static/results/pipeline_20260328_221326_segmented.png"
+          }
+        ],
+        "images": {
+          "original": "/static/results/pipeline_20260328_221326_original.png",
+          "resized": "/static/results/pipeline_20260328_221326_resized.png",
+          "denoised": "/static/results/pipeline_20260328_221326_denoised.png",
+          "normalized": "/static/results/pipeline_20260328_221326_normalized.png",
+          "enhanced": "/static/results/pipeline_20260328_221326_enhanced.png",
+          "segmented": "/static/results/pipeline_20260328_221326_segmented.png"
+        }
+      },
+      "timestamp": "2026-03-28 22:13:40"
+    }
+  },
+  {
+    "report_id": "RPT-20260328223751-3D3ACF",
+    "report_name": "PM25_Report_20260328_223737",
+    "image_name": "satellite_image_3.jpeg",
+    "date": "2026-03-28 22:37:51",
+    "pm25": 15.3,
+    "status": "Completed",
+    "created_at": "2026-03-28T22:37:51.969342",
+    "analysis_data": {
+      "success": true,
+      "pm25": 15.3,
+      "confidence": 84.2,
+      "aqi_category": "Moderate",
+      "aqi_color": "#FFFF00",
+      "health_advice": "Air quality is acceptable. However, there may be a risk for some people.",
+      "features": {
+        "haze_score": 41.14,
+        "turbidity": 34.14,
+        "visibility": 94.66999816894531,
+        "contrast": 63.79,
+        "brightness": 105.6,
+        "saturation": 77.53
+      },
+      "images": {
+        "original": "/static/uploads/20260328_223737_satellite_image_3.jpeg",
+        "heatmap": "/static/results/heatmap_20260328_223737.png",
+        "dehazed": "/static/results/dehazed_20260328_223737.png",
+        "before_after": "/static/results/before_after_20260328_223737.png",
+        "timeseries": "/static/results/timeseries_20260328_223737.png",
+        "features_chart": "/static/results/features_20260328_223737.png"
+      },
+      "preprocessing": {
+        "steps": [
+          {
+            "key": "resized",
+            "title": "Resize",
+            "icon": "fa-up-right-and-down-left-from-center",
+            "image": "/static/results/pipeline_20260328_223737_resized.png"
+          },
+          {
+            "key": "denoised",
+            "title": "Denoising",
+            "icon": "fa-filter",
+            "image": "/static/results/pipeline_20260328_223737_denoised.png"
+          },
+          {
+            "key": "normalized",
+            "title": "Normalization",
+            "icon": "fa-sliders",
+            "image": "/static/results/pipeline_20260328_223737_normalized.png"
+          },
+          {
+            "key": "enhanced",
+            "title": "Enhancement",
+            "icon": "fa-circle-half-stroke",
+            "image": "/static/results/pipeline_20260328_223737_enhanced.png"
+          }
+        ],
+        "images": {
+          "original": "/static/results/pipeline_20260328_223737_original.png",
+          "resized": "/static/results/pipeline_20260328_223737_resized.png",
+          "denoised": "/static/results/pipeline_20260328_223737_denoised.png",
+          "normalized": "/static/results/pipeline_20260328_223737_normalized.png",
+          "enhanced": "/static/results/pipeline_20260328_223737_enhanced.png"
+        }
+      },
+      "segmentation": {
+        "title": "Segmentation",
+        "method": "K-means Clustering",
+        "image": "/static/results/segmentation_20260328_223737_kmeans_segmented.png"
+      },
+      "timestamp": "2026-03-28 22:37:51"
+    }
+  },
+  {
+    "report_id": "RPT-20260328230650-EE06A1",
+    "report_name": "PM25_Report_20260328_230637",
+    "image_name": "satellite_image_17.jpg",
+    "date": "2026-03-28 23:06:50",
+    "pm25": 110.99,
+    "status": "Completed",
+    "created_at": "2026-03-28T23:06:50.400572",
+    "analysis_data": {
+      "success": true,
+      "pm25": 110.99,
+      "confidence": 67.6,
+      "aqi_category": "Unhealthy",
+      "aqi_color": "#FF0000",
+      "health_advice": "Everyone may begin to experience health effects.",
+      "features": {
+        "haze_score": 93.48,
+        "turbidity": 34.07,
+        "visibility": 85.0,
+        "contrast": 35.26,
+        "brightness": 109.31,
+        "saturation": 67.39
+      },
+      "images": {
+        "original": "/static/uploads/20260328_230637_satellite_image_17.jpg",
+        "heatmap": "/static/results/heatmap_20260328_230637.png",
+        "dehazed": "/static/results/dehazed_20260328_230637.png",
+        "before_after": "/static/results/before_after_20260328_230637.png",
+        "timeseries": "/static/results/timeseries_20260328_230637.png",
+        "features_chart": "/static/results/features_20260328_230637.png"
+      },
+      "preprocessing": {
+        "steps": [
+          {
+            "key": "resized",
+            "title": "Resize",
+            "icon": "fa-up-right-and-down-left-from-center",
+            "image": "/static/results/pipeline_20260328_230637_resized.png"
+          },
+          {
+            "key": "denoised",
+            "title": "Noise Removal",
+            "icon": "fa-filter",
+            "image": "/static/results/pipeline_20260328_230637_denoised.png"
+          },
+          {
+            "key": "normalized",
+            "title": "Contrast",
+            "icon": "fa-sliders",
+            "image": "/static/results/pipeline_20260328_230637_normalized.png"
+          },
+          {
+            "key": "enhanced",
+            "title": "Enhancement",
+            "icon": "fa-circle-half-stroke",
+            "image": "/static/results/pipeline_20260328_230637_enhanced.png"
+          }
+        ],
+        "images": {
+          "original": "/static/results/pipeline_20260328_230637_original.png",
+          "resized": "/static/results/pipeline_20260328_230637_resized.png",
+          "denoised": "/static/results/pipeline_20260328_230637_denoised.png",
+          "normalized": "/static/results/pipeline_20260328_230637_normalized.png",
+          "enhanced": "/static/results/pipeline_20260328_230637_enhanced.png"
+        }
+      },
+      "segmentation": {
+        "title": "Segmentation",
+        "method": "K-means Clustering",
+        "image": "/static/results/segmentation_20260328_230637_kmeans_segmented.png"
+      },
+      "timestamp": "2026-03-28 23:06:50"
+    }
+  },
+  {
+    "report_id": "RPT-20260328231314-B1DEA5",
+    "report_name": "PM25_Report_20260328_231300",
+    "image_name": "satellite_image_4.jpeg",
+    "date": "2026-03-28 23:13:14",
+    "pm25": 42.65,
+    "status": "Completed",
+    "created_at": "2026-03-28T23:13:14.396055",
+    "analysis_data": {
+      "success": true,
+      "pm25": 42.65,
+      "confidence": 76.9,
+      "aqi_category": "Unhealthy for Sensitive Groups",
+      "aqi_color": "#FF7E00",
+      "health_advice": "Members of sensitive groups may experience health effects.",
+      "features": {
+        "haze_score": 64.34,
+        "turbidity": 28.5,
+        "visibility": 92.22000122070312,
+        "contrast": 62.15,
+        "brightness": 91.01,
+        "saturation": 88.68
+      },
+      "images": {
+        "original": "/static/uploads/20260328_231300_satellite_image_4.jpeg",
+        "heatmap": "/static/results/heatmap_20260328_231300.png",
+        "dehazed": "/static/results/dehazed_20260328_231300.png",
+        "before_after": "/static/results/before_after_20260328_231300.png",
+        "timeseries": "/static/results/timeseries_20260328_231300.png",
+        "features_chart": "/static/results/features_20260328_231300.png"
+      },
+      "preprocessing": {
+        "steps": [
+          {
+            "key": "resized",
+            "title": "Resize",
+            "icon": "fa-up-right-and-down-left-from-center",
+            "image": "/static/results/pipeline_20260328_231300_resized.png"
+          },
+          {
+            "key": "denoised",
+            "title": "Noise Removal",
+            "icon": "fa-filter",
+            "image": "/static/results/pipeline_20260328_231300_denoised.png"
+          },
+          {
+            "key": "normalized",
+            "title": "Contrast",
+            "icon": "fa-sliders",
+            "image": "/static/results/pipeline_20260328_231300_normalized.png"
+          },
+          {
+            "key": "enhanced",
+            "title": "Enhancement",
+            "icon": "fa-circle-half-stroke",
+            "image": "/static/results/pipeline_20260328_231300_enhanced.png"
+          }
+        ],
+        "images": {
+          "original": "/static/results/pipeline_20260328_231300_original.png",
+          "resized": "/static/results/pipeline_20260328_231300_resized.png",
+          "denoised": "/static/results/pipeline_20260328_231300_denoised.png",
+          "normalized": "/static/results/pipeline_20260328_231300_normalized.png",
+          "enhanced": "/static/results/pipeline_20260328_231300_enhanced.png"
+        }
+      },
+      "segmentation": {
+        "title": "Segmentation",
+        "method": "K-means Clustering",
+        "image": "/static/results/segmentation_20260328_231300_kmeans_segmented.png"
+      },
+      "timestamp": "2026-03-28 23:13:14"
+    }
+  },
+  {
+    "report_id": "RPT-20260329004600-6AA98E",
+    "report_name": "PM25_Report_20260329_004545",
+    "image_name": "satellite_image_17.jpg",
+    "date": "2026-03-29 00:46:00",
+    "pm25": 110.99,
+    "status": "Completed",
+    "created_at": "2026-03-29T00:46:00.071594",
+    "analysis_data": {
+      "success": true,
+      "pm25": 110.99,
+      "confidence": 91.0,
+      "aqi_category": "Unhealthy",
+      "aqi_color": "#FF0000",
+      "health_advice": "Everyone may begin to experience health effects.",
+      "features": {
+        "haze_score": 93.48,
+        "turbidity": 34.07,
+        "visibility": 85.0,
+        "contrast": 35.26,
+        "brightness": 109.31,
+        "saturation": 67.39
+      },
+      "images": {
+        "original": "/static/uploads/20260329_004545_satellite_image_17.jpg",
+        "heatmap": "/static/results/heatmap_20260329_004545.png",
+        "dehazed": "/static/results/dehazed_20260329_004545.png",
+        "before_after": "/static/results/before_after_20260329_004545.png",
+        "timeseries": "/static/results/timeseries_20260329_004545.png",
+        "features_chart": "/static/results/features_20260329_004545.png"
+      },
+      "preprocessing": {
+        "steps": [
+          {
+            "key": "resized",
+            "title": "Resize",
+            "icon": "fa-up-right-and-down-left-from-center",
+            "image": "/static/results/pipeline_20260329_004545_resized.png"
+          },
+          {
+            "key": "denoised",
+            "title": "Noise Removal",
+            "icon": "fa-filter",
+            "image": "/static/results/pipeline_20260329_004545_denoised.png"
+          },
+          {
+            "key": "normalized",
+            "title": "Normalized (Min-Max)",
+            "icon": "fa-sliders",
+            "image": "/static/results/pipeline_20260329_004545_normalized.png"
+          },
+          {
+            "key": "contrast",
+            "title": "Contrast",
+            "icon": "fa-circle-half-stroke",
+            "image": "/static/results/pipeline_20260329_004545_contrast.png"
+          }
+        ],
+        "images": {
+          "original": "/static/results/pipeline_20260329_004545_original.png",
+          "resized": "/static/results/pipeline_20260329_004545_resized.png",
+          "denoised": "/static/results/pipeline_20260329_004545_denoised.png",
+          "normalized": "/static/results/pipeline_20260329_004545_normalized.png",
+          "contrast": "/static/results/pipeline_20260329_004545_contrast.png"
+        }
+      },
+      "segmentation": {
+        "title": "Segmentation",
+        "method": "K-means Clustering",
+        "image": "/static/results/segmentation_20260329_004545_kmeans_segmented.png"
+      },
+      "timestamp": "2026-03-29 00:46:00"
+    }
+  }
+]
