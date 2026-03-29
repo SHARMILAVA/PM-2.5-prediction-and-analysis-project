@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - PM2.5 Estimation System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="login-page">
+    <main class="login-shell">
+        <section class="login-card">
+            <div class="login-brand">
+                <span class="brand-chip"><i class="fas fa-user-plus"></i> PM2.5</span>
+                <h1>Create Account</h1>
+                <p>Register a new account to access the PM2.5 estimation dashboard.</p>
+            </div>
+
+            {% if error %}
+            <div class="login-error">
+                <i class="fas fa-circle-exclamation"></i>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <form method="POST" class="login-form" autocomplete="off">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" value="{{ form_data.username if form_data else '' }}" required>
+
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" value="{{ form_data.email if form_data else '' }}" required>
+
+                <label for="password">Password</label>
+                <div class="password-field">
+                    <input type="password" id="password" name="password" placeholder="Create a password" required>
+                    <button type="button" class="password-toggle" data-target="password" aria-label="Show password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+
+                <button type="submit" class="btn-primary login-btn">Create Account</button>
+            </form>
+
+            <a href="{{ url_for('login') }}" class="btn-secondary auth-alt-btn">Back to Login</a>
+        </section>
+    </main>
+    <script>
+        document.querySelectorAll('.password-toggle').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const icon = btn.querySelector('i');
+                const isHidden = input.type === 'password';
+
+                input.type = isHidden ? 'text' : 'password';
+                icon.classList.toggle('fa-eye', !isHidden);
+                icon.classList.toggle('fa-eye-slash', isHidden);
+                btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+            });
+        });
+    </script>
+</body>
+</html>
