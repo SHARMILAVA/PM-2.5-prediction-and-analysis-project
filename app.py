@@ -5,9 +5,12 @@ PM2.5 Estimation System - Main Application
 Author: PM2.5 Estimation System
 """
 
-from flask import Flask, render_template, request, jsonify, url_for, send_file, redirect, session
+from flask import Flask, render_template, request, jsonify, url_for, send_file, redirect, session, flash
 import os
+import re
+import sqlite3
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import traceback
 import json
@@ -50,6 +53,8 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'tif', 'tiff', 'bmp'}
 # Simple credential gate for demo/admin access
 ADMIN_EMAIL = 'admin@gmail.com'
 ADMIN_PASSWORD = '160904'
+MIN_PASSWORD_LENGTH = 8
+EMAIL_REGEX = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 
 # Ensure required directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -58,6 +63,104 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 os.makedirs(DATA_DIR, exist_ok=True)
 
 REPORT_HISTORY_FILE = os.path.join(DATA_DIR, 'report_history.json')
+USER_DATABASE_FILE = os.path.join(DATA_DIR, 'users.db')
+
+
+def get_db_connection():
+    """Return a SQLite connection for user storage."""
+    connection = sqlite3.connect(USER_DATABASE_FILE)
+    connection.row_factory = sqlite3.Row
+    return connection
+
+
+def init_user_database():
+    """Create the user table and seed the default admin account."""
+    connection = get_db_connection()
+    try:
+        with connection:
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    full_name TEXT NOT NULL,
+                    email TEXT NOT NULL UNIQUE,
+                    password_hash TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+
+        existing_admin = connection.execute(
+            'SELECT id FROM users WHERE email = ?',
+            (ADMIN_EMAIL,)
+        ).fetchone()
+
+        if not existing_admin:
+            connection.execute(
+                'INSERT INTO users (full_name, email, password_hash, created_at) VALUES (?, ?, ?, ?)',
+                (
+                    'Administrator',
+                    ADMIN_EMAIL,
+                    generate_password_hash(ADMIN_PASSWORD),
+                    datetime.now().isoformat()
+                )
+            )
+            connection.commit()
+    finally:
+        connection.close()
+
+
+def is_valid_email(email):
+    """Validate email format."""
+    return bool(EMAIL_REGEX.match(email or ''))
+
+
+def is_valid_password(password):
+    """Validate password strength."""
+    return len(password or '') >= MIN_PASSWORD_LENGTH
+
+
+def get_user_by_email(email):
+    """Fetch a single user record by email."""
+    connection = get_db_connection()
+    try:
+        return connection.execute(
+            'SELECT * FROM users WHERE lower(email) = lower(?)',
+            (email,)
+        ).fetchone()
+    finally:
+        connection.close()
+
+
+def create_user(full_name, email, password):
+    """Create a new user account with a hashed password."""
+    connection = get_db_connection()
+    try:
+        connection.execute(
+            'INSERT INTO users (full_name, email, password_hash, created_at) VALUES (?, ?, ?, ?)',
+            (
+                full_name.strip(),
+                email.strip().lower(),
+                generate_password_hash(password),
+                datetime.now().isoformat()
+            )
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def authenticate_user(email, password):
+    """Verify user credentials against the database."""
+    user = get_user_by_email(email)
+    if not user:
+        return None
+
+    if check_password_hash(user['password_hash'], password):
+        return user
+
+    return None
+init_user_database()
 
 
 def allowed_file(filename):
@@ -176,17 +279,38 @@ def login():
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
 
-        if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
+        user = authenticate_user(email, password)
+        if user:
+            session.clear()
             session['authenticated'] = True
-            session['user_email'] = ADMIN_EMAIL
+            session['user_id'] = user['id']
+            session['user_email'] = user['email']
+            session['user_full_name'] = user['full_name']
             return redirect(url_for('home'))
 
-        return render_template('login.html', error='Invalid email or password.')
+        return render_template(
+            'login.html',
+            error='Invalid email or password.',
+            form_data={'email': email}
+        )
 
     if is_logged_in():
         return redirect(url_for('home'))
 
     return render_template('login.html')
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    """Allow instant access by starting a guest session and redirecting home."""
+    if not is_logged_in():
+        session.clear()
+        session['authenticated'] = True
+        session['user_id'] = 'guest'
+        session['user_email'] = 'guest@local'
+        session['user_full_name'] = 'Guest User'
+
+    return redirect(url_for('home'))
 
 
 @app.route('/logout')
